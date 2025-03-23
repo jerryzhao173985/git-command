@@ -310,3 +310,35 @@ An efficient strategy is: create a PR from dev to main—with code review done, 
 - **Rename the old main branch to "original"** to keep it as a reference.
 - **Update your default branch settings** and have your team clean up their local repositories.
 
+---
+## restore local branch to the remote's head
+
+1. **Fetch the Latest Remote Updates:**
+
+   ```bash
+   git fetch origin
+   ```
+
+   *Explanation:*  
+   This updates your remote-tracking branches (like `origin/main`) with the latest state from the server.
+
+2. **Reset Your Local main Branch to the Remote State:**
+
+   ```bash
+   git reset --hard origin/main
+   ```
+
+   *Explanation:*  
+   This command resets your current branch’s pointer and working directory to match `origin/main` exactly. It discards any local commits and modifications.
+
+3. **(Optional) Remove Untracked Files and Directories:**
+
+   If you have untracked files that you also want to remove, run:
+
+   ```bash
+   git clean -fd
+   ```
+
+   *Explanation:*  
+   This deletes all untracked files and directories, ensuring your working tree mirrors the remote repository.
+

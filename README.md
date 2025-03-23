@@ -133,3 +133,180 @@ git log --graph --oneline --all
 # Clean up local branches
 git branch --merged | grep -v "\*" | xargs -n 1 git branch -d
 ```
+
+---
+
+## Renaming branches 
+
+### 1. Prepare by Checking Your Current Branches
+
+Before making any changes, verify which branches exist locally and what their upstream remotes are. This helps avoid confusion later.
+
+```bash
+git branch -vv
+```
+
+*Explanation:*  
+This command lists all local branches with details about their last commit and the remote branch they track. It’s a good check to know where you are starting.
+
+---
+
+### 2. Rename the Old “main” Branch to “original”
+
+If the old “main” branch (your original stable branch) still exists and you want to preserve it under a new name (“original”), follow these steps:
+
+#### a. Switch to the old main branch
+
+```bash
+git checkout main
+```
+
+*Explanation:*  
+This command checks out the old main branch so you can rename it.
+
+#### b. Rename it locally
+
+```bash
+git branch -m main original
+```
+
+*Explanation:*  
+The `-m` flag renames the branch from “main” to “original” locally. (The `-m` stands for “move/rename.”)
+
+#### c. Push the new “original” branch to remote
+
+```bash
+git push origin original
+```
+
+*Explanation:*  
+This pushes the renamed branch to the remote repository. If the branch “original” doesn’t exist remotely yet, it will be created.
+
+#### d. Remove the old “main” branch from the remote
+
+```bash
+git push origin --delete main
+```
+
+*Explanation:*  
+This command deletes the remote branch named “main.” (Be sure that no one else is using it or that you’ve coordinated this change with your team.)  
+*Note:* Some repository hosts (like GitHub) require you to change the default branch in the settings before you can delete “main.”
+
+---
+
+### 3. Rename the “dev” Branch to “main”
+
+Now that the old “main” branch has been renamed and removed from remote, you can safely rename your stable “dev” branch to “main.”
+
+#### a. Switch to your dev branch
+
+```bash
+git checkout dev
+```
+
+*Explanation:*  
+Make sure you are on the dev branch that you want to promote.
+
+#### b. Rename it locally to main
+
+```bash
+git branch -m dev main
+```
+
+*Explanation:*  
+This renames your current dev branch to “main” locally.
+
+#### c. Push the new “main” branch to remote
+
+```bash
+git push origin main
+```
+
+*Explanation:*  
+This pushes the newly renamed main branch to your remote repository.
+
+#### d. Set the upstream for the new main branch
+
+```bash
+git push --set-upstream origin main
+```
+
+*Explanation:*  
+This command establishes a tracking connection between your local “main” branch and the remote “main” branch so that future `git pull` or `git push` commands work without needing to specify the branch.
+
+---
+
+### 4. Additional Useful Commands
+
+- **View the commit history as a graph:**
+
+  ```bash
+  git log --graph --oneline --decorate
+  ```
+
+  *Explanation:*  
+  This command provides a concise, graphical view of your commit history, which is useful to verify that your branches have the correct history after renaming.
+
+- **List all branches (local and remote):**
+
+  ```bash
+  git branch -a
+  ```
+
+  *Explanation:*  
+  This shows you all branches, including remote-tracking branches, to ensure that your changes have been propagated as expected.
+
+---
+
+### 5. Final Considerations
+
+- **Remote Default Branch:**  
+  If your repository is hosted on platforms like GitHub or GitLab, remember to update the default branch setting in the repository settings to “main.” This ensures that pull requests and CI/CD pipelines are aligned with the new naming.
+
+- **Inform Your Team:**  
+  Renaming branches can affect collaborators. Make sure everyone updates their local clones accordingly, for example by running:
+
+  ```bash
+  git fetch --all --prune
+  ```
+
+  *Explanation:*  
+  This command fetches all updates from the remote and cleans up any deleted remote branches.
+
+- **Backup:**  
+  Before performing branch deletions, ensure that your work is backed up (or that you have a reference, such as a tag) in case you need to revert the changes.
+
+---
+
+### Summary
+
+1. **Rename the old main branch:**
+   - `git checkout main`
+   - `git branch -m main original`
+   - `git push origin original`
+   - `git push origin --delete main`
+2. **Rename dev to main:**
+   - `git checkout dev`
+   - `git branch -m dev main`
+   - `git push origin main`
+   - `git push --set-upstream origin main`
+3. **Verify changes and update settings if necessary.**
+
+An efficient strategy is: create a PR from dev to main—with code review done, no conflicts, and the goal of making dev’s stable state the new main—the simplest approach is to merge the PR using a **merge commit**. This approach preserves full commit history and clearly shows that dev was merged into main.
+
+### Why Use "Create a Merge Commit"?
+
+- **Preserves Full History:** A merge commit keeps every commit from dev intact. This is useful for auditing and understanding the evolution of your features.
+- **Non-destructive:** It doesn’t rewrite any commit hashes or lose the granularity of your commits. This is safer when you want to maintain a detailed history.
+- **Clear Branch Record:** It clearly documents that a merge happened—ideal for future reference.
+
+*In contrast:*
+- **Squash and Merge** would combine all changes into one commit, which gives you a cleaner history on main but loses individual commit details.
+- **Rebase and Merge** creates a linear history but rewrites commit hashes, which can be problematic if others already share the dev branch.
+
+### Summary
+
+- **Merge the PR using "Create a Merge Commit"** to incorporate all changes from dev while preserving the commit history.
+- **Rename the old main branch to "original"** to keep it as a reference.
+- **Update your default branch settings** and have your team clean up their local repositories.
+

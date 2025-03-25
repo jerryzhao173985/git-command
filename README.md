@@ -136,6 +136,34 @@ git branch --merged | grep -v "\*" | xargs -n 1 git branch -d
 
 ---
 
+To completely discard your local changes and reset your branch to match the remote’s latest commit, you can use the following commands:
+
+1. **Fetch the Latest Remote Changes:**
+
+   ```bash
+   git fetch origin
+   ```
+
+2. **Reset Your Local Branch:**
+
+   Replace `<branch>` with your branch name (e.g., `master` or `main`):
+
+   ```bash
+   git reset --hard origin/<branch>
+   ```
+
+3. **Remove Untracked Files (Optional):**
+
+   If you also want to remove any untracked files or directories, run:
+
+   ```bash
+   git clean -fd
+   ```
+
+These steps will force your local repository to match the current state of the remote branch, discarding all local modifications and untracked files. Use these commands with caution as they permanently delete local changes that haven’t been committed or pushed.
+
+---
+
 ## Renaming branches 
 
 ### 1. Prepare by Checking Your Current Branches

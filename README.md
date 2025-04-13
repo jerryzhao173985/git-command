@@ -370,3 +370,166 @@ An efficient strategy is: create a PR from dev to main—with code review done, 
    *Explanation:*  
    This deletes all untracked files and directories, ensuring your working tree mirrors the remote repository.
 
+---
+
+## Commit only tracked files
+
+### Method 1: Using `git commit -a`
+
+When you run:
+
+```bash
+git commit -a -m "Your commit message"
+```
+
+Git automatically stages any modifications and deletions from tracked files and commits them. It does **not** stage any untracked files (which are your test files), so they won’t be included in your commit. If you often need to commit changes to tracked files only, `git commit -a` is very convenient.
+
+### Method 2: Using `git add -u`
+
+Alternatively, you can explicitly update the index for tracked files with:
+
+```bash
+git add -u
+git commit -m "Your commit message"
+```
+
+The `-u` (or `--update`) flag tells Git to stage changes (including modifications and deletions) to already tracked files, again leaving untracked files untouched.
+
+Both approaches let you commit and push only those changes that were already part of the repository while ignoring the new, untracked files.
+
+---
+
+## Add extra untracked file and “unstage” the file to leave out
+
+The idea is to stage changes for all modified tracked files and then “unstage” the one file you want to leave out, and finally add the extra untracked file you want to include.
+
+1. **Remove the Unwanted File from the Staging Area:**  
+   Since you do not want to commit the changes in `xxx.cpp`, remove it from the staging area:
+   ```bash
+   git reset xxx.cpp
+   ```
+   This command will “unstage” that file’s changes, leaving it modified in your working directory but not included in the upcoming commit.
+
+2. **Add the Specific Untracked File:**  
+   If you also want to commit an untracked file, `changelog.md`. Add this file explicitly:
+   ```bash
+   git add changelog.md
+   ```
+
+3. **Review What’s Staged (Optional but Recommended):**  
+   It’s always a good idea to verify that only the desired changes are staged:
+   ```bash
+   git status
+   git diff --cached
+   git diff <file> | cat
+   ```
+   Ensure that all tracked changes (except `matrixviz/src/InputReader/SimplePipeReader.cpp`) and the new file `guilogger/changelog.md` are staged.
+
+### Explanation of the Process
+
+- **`git add -u`**: This command stages changes (modifications and deletions) for all files that are already being tracked by Git. It intentionally does not touch untracked files, so your tests or other new files remain unstaged by default.  
+- **`git reset <file>`**: This command removes the specified file from the staging area. By doing this, you can precisely control what goes into the commit.  
+- **`git add <file>` for untracked files**: Adding files one by one is useful when you want to include something that isn’t tracked by default without having to stage all untracked files.
+
+---
+
+## Remove the File from Tracking Going Forward
+
+1. **Remove the file from tracking going forward:**  
+   This option will stop Git from tracking further changes to that file and remove it from the HEAD of your repository. However, the file will still remain in the repository’s past commits. This is typically enough if the file isn’t sensitive but was simply mis-uploaded.
+
+2. **Purge the file from the entire repository history:**  
+   This more advanced method removes the file from all commits, which is useful if the file contains sensitive information that you never want to be available in any history. This process rewrites the repository history and requires a force push and coordination with any other collaborators.
+
+## Option 1: Remove the File from Tracking Going Forward
+
+### Step 1. Remove the File from the Index
+Run the following command to remove the file from tracking (while leaving it in your working directory):
+```bash
+git rm --cached guilogger/src/moc_predefs.h
+```
+The `--cached` option tells Git to remove the file from the index (i.e., stop tracking it) without deleting it from your local filesystem.
+
+### Step 2. Update Your .gitignore
+To prevent Git from adding this file in future commits, add it to your `.gitignore`. You can do this by appending the file path to your `.gitignore` file:
+```bash
+echo "guilogger/src/moc_predefs.h" >> .gitignore
+```
+This makes sure that even if the file exists locally or changes, Git will ignore it going forward.
+
+### Step 3. Commit the Change
+Now, commit the changes that remove the file from tracking and update the ignore list:
+```bash
+git commit -m "Remove guilogger/src/moc_predefs.h from tracking and add it to .gitignore"
+```
+
+### Step 4. Push Your Changes
+Push the commit to the remote repository:
+```bash
+git push
+```
+This commit will remove the file from the repository’s current state (HEAD) but will **not remove it from the history**. Future clones of the repository won’t include the file in the working directory, although the file will still exist in earlier commits.
+
+## Option 2: Remove the File from the Entire Repository History
+
+If you need to completely remove the file from every commit (for example, if it contains sensitive information), you must rewrite the repository history. **Be aware:** This will change commit hashes and require a force push. Everyone working with the repository must coordinate with you on this change.
+
+### Using `git filter-branch`
+Run the following command to remove the file from every commit:
+```bash
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch guilogger/src/moc_predefs.h" \
+  --prune-empty --tag-name-filter cat -- --all
+```
+This command goes through every commit in your repository and removes `guilogger/src/moc_predefs.h` from the index. The file is removed from all commits while preserving the rest of your history.
+
+### Clean Up and Update References
+After running the filter-branch command, it’s a good idea to clear out the backup references that Git creates:
+```bash
+rm -rf .git/refs/original/
+git reflog expire --expire=now --all
+git gc --prune=now
+```
+
+### Force Push the Rewritten History
+Once you’ve confirmed everything looks right, force push your changes:
+```bash
+git push --force
+```
+**Note:** A force push can overwrite changes on the remote repository, and if other collaborators have clones of the repository, they will need to re-clone or carefully realign their local histories.
+
+### Update Your .gitignore
+Even after rewriting history, update your `.gitignore` as shown earlier:
+```bash
+echo "guilogger/src/moc_predefs.h" >> .gitignore
+git add .gitignore
+git commit -m "Add guilogger/src/moc_predefs.h to .gitignore"
+git push
+```
+
+## Which Option Should You Choose?
+
+- **Option 1** is simpler and sufficient when the file isn’t sensitive but was mis-uploaded. Future commits will not track this file, but its past existence in the repository remains.
+- **Option 2** is more complex and only recommended if you need to completely remove the file from all history (typically necessary if sensitive data was accidentally committed).
+
+Both methods achieve the goal of ensuring that `guilogger/src/moc_predefs.h` is no longer tracked going forward, with Option 2 providing a complete removal from repository history. Choose the one that best fits your needs.
+
+---
+
+## Understanding .gitignore Patterns
+
+- **Wildcards:**  
+  - A single asterisk (`*`) matches any number of characters except a directory separator (`/`).
+  - Double asterisks (`**`) match directories recursively.
+- **Example:**  
+  - The pattern `moc_*` matches any file in the current directory whose name starts with `moc_`.
+  - The pattern `**/moc_*` tells Git to ignore any file starting with `moc_` in any subdirectory.
+
+- **Stop Tracking Already Tracked Files:**  
+   For files that were committed previously (like `src/moc.h`), you must untrack them. For example:
+   ```bash
+   git rm --cached src/moc.h
+   ```
+   Do the same for any other file you no longer want to track—even though they’re now in .gitignore, Git will continue tracking changes to files that have already been committed unless you remove them from the index.
+
+---

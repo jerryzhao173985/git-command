@@ -533,3 +533,40 @@ Both methods achieve the goal of ensuring that `guilogger/src/moc_predefs.h` is 
    Do the same for any other file you no longer want to track—even though they’re now in .gitignore, Git will continue tracking changes to files that have already been committed unless you remove them from the index.
 
 ---
+
+## Git diffs usage for code reviews
+
+The command `git diff <file> | cat` will display the differences in the specified file, but piping it through `cat` doesn't alter the output. This might be used in certain shell configurations to force the output through a pager or to prevent Git from using its default pager.
+
+### Compare changes in a specific file
+
+```bash
+git diff <file>
+```
+
+This command shows the unstaged changes in `<file>` compared to the last commit.
+
+### Compare the staged changes (those added to the index) with the last commit
+
+```bash
+git diff --staged <file>
+```
+
+This will display the differences between the staged version of `<file>` and the last committed version.
+
+### See the entire file in the diff output
+
+You can increase the context lines using the `-U` option:
+
+```bash
+git diff -U9999 <file>
+```
+
+
+This command will show the full content of the file with differences highlighted, which can be helpful for reviewing changes in context. 
+
+For a more visually enhanced diff output, consider using tools like `diff-so-fancy` or `delta`, which provide improved formatting and readability. 
+
+---
+
+

@@ -632,3 +632,20 @@ Notes:
 	•	Replace <branch> with whatever branch you pushed to (e.g. main or master).
 	•	--force-with-lease is safer than a plain --force, because it refuses to clobber if someone else pushed in the meantime.
 	•	After step 2 you’ll see your changes unstaged; edit them, then re‑commit as in step 5.
+
+---
+
+## git diff GUI with tkdiff
+
+```
+# (if you haven’t already) install the Tk-based diff UI:
+brew install tkdiff                                          [oai_citation_attribution:0‡Git](https://git-scm.com/docs/git-difftool?utm_source=chatgpt.com) [oai_citation_attribution:1‡Oracle Documentation](https://docs.oracle.com/cd/E36784_01/html/E36870/git-difftool-1.html?utm_source=chatgpt.com)
+
+# launch an ad‑hoc GUI diff between your working tree and HEAD:
+git difftool --tool=tkdiff --no-prompt                     [oai_citation_attribution:2‡Oracle Documentation](https://docs.oracle.com/cd/E36784_01/html/E36870/git-difftool-1.html?utm_source=chatgpt.com) [oai_citation_attribution:3‡Kernel.org](https://www.kernel.org/pub/software/scm/git/docs/git-difftool.html?utm_source=chatgpt.com)
+
+# to view only staged changes in the same GUI:
+git difftool --tool=tkdiff --no-prompt --staged            [oai_citation_attribution:4‡Oracle Documentation](https://docs.oracle.com/cd/E36784_01/html/E36870/git-difftool-1.html?utm_source=chatgpt.com) [oai_citation_attribution:5‡Git](https://git-scm.com/docs/git-difftool/2.22.0?utm_source=chatgpt.com)
+```
+
+---

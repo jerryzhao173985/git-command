@@ -569,4 +569,66 @@ For a more visually enhanced diff output, consider using tools like `diff-so-fan
 
 ---
 
+## Discrad all local changes and match the version on GitHub
+	1.	Fetch the latest state from the remote.
+	2.	Reset your branch hard to the remote HEAD.
+	3.	Clean out any untracked files or directories.
 
+Commands
+
+### 1. Fetch the latest refs from GitHub without altering your worktree
+```
+git fetch origin  
+```
+Fetch downloads commits, files, and refs from the remote into your local repo, updating remote‑tracking branches safely without merging  ￼
+
+### 2. Hard‑reset your current branch to match the remote HEAD (replace <branch> with master/main)
+```
+git reset --hard origin/<branch>  
+```
+This moves your branch’s HEAD to the fetched commit and overwrites your working tree and index to match, discarding all local modifications  ￼
+
+### 3. (Optional) Remove all untracked files and directories
+```
+git clean -fd  
+```
+Deletes any files or directories not under version control, ensuring a pristine workspace  ￼
+
+⸻
+
+Replace <branch> with the name of your branch (e.g. main or master). After these steps, your local repository will be identical to what’s currently on GitHub.
+
+---
+
+## Revert push (Un-push) made to Github and Un-commit to local workspace
+	1.	“Un‑commit” your bad push, bringing the files back as working‑tree edits
+	2.	Force‑push to drop that bad commit from GitHub
+	3.	Let you fix locally, then commit & push normally
+
+```
+# 1. Make sure you’re on the right branch
+git checkout <branch>             # e.g. main or master
+
+# 2. Move your HEAD back one commit, keeping all those changes in your working tree
+git reset --mixed HEAD~1
+
+#    Now `git status` will show exactly the files from your botched commit
+#    as unstaged edits, so you can fix the error in your editor.
+
+# 3. Force‐update GitHub to forget that bad commit
+git push --force-with-lease origin <branch>
+
+#    This rewrites the remote so HEAD matches the commit before your bad push.
+
+# 4. Fix the error in your files locally…
+
+# 5. Stage, commit & push your corrected version
+git add .
+git commit -m "fix: correct the error from previous push"
+git push origin <branch>
+```
+
+Notes:
+	•	Replace <branch> with whatever branch you pushed to (e.g. main or master).
+	•	--force-with-lease is safer than a plain --force, because it refuses to clobber if someone else pushed in the meantime.
+	•	After step 2 you’ll see your changes unstaged; edit them, then re‑commit as in step 5.

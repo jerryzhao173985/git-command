@@ -766,7 +766,7 @@ git show HEAD >> changes.txt
 
 ⸻
 
-## 9. (Optional) Shell Script to Save All Diffs
+### 9. (Optional) Shell Script to Save All Diffs
 ```
 #!/bin/bash
 timestamp=$(date +"%Y-%m-%d_%H-%M-%S")

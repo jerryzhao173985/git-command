@@ -649,3 +649,144 @@ git difftool --tool=tkdiff --no-prompt --staged            [oai_citation_attribu
 ```
 
 ---
+
+## Git Commands to View and Save Changes
+
+Use git diff and git show to inspect staged, unstaged, and committed changes, and how to save those into a file like changes.txt.
+⸻
+
+### 1. View All Staged Changes
+
+These are the changes added with git add and ready to be committed.
+
+git diff --cached
+
+To save them to a file:
+
+git diff --cached > changes.txt
+
+
+⸻
+
+### 2. View All Unstaged Changes
+
+These are modifications made in files but not yet added to staging.
+
+git diff
+
+To save to a file:
+
+git diff > changes.txt
+
+
+⸻
+
+### 3. View Latest Commit Changes
+
+To see the diff of the most recent commit (including commit message and file changes):
+
+git show
+
+Or more explicitly:
+
+git show HEAD
+
+To save to file:
+
+git show HEAD > changes.txt
+
+
+⸻
+
+### 4. View Latest Commit Message + Stats
+
+Get a summary of the commit message and file changes:
+
+git show --stat
+
+For full details:
+
+git show HEAD --pretty=full --patch
+
+
+⸻
+
+### 5. View Changes Since a Specific Commit
+
+To show what has changed since 3 commits ago:
+
+git diff HEAD~3
+
+To save to file:
+
+git diff HEAD~3 > changes.txt
+
+
+⸻
+
+### 6. Preview Staged Commit (Diff + Files)
+
+See exactly what will be committed:
+
+git diff --cached
+git status
+
+To save both:
+
+git diff --cached > changes.txt
+git status >> changes.txt
+
+
+⸻
+
+### 7. List Only Changed File Names
+
+Staged files:
+
+git diff --cached --name-only
+
+Files in the latest commit:
+
+git show --name-only
+
+
+⸻
+
+### 8. Save Everything into changes.txt
+
+This captures:
+	•	All staged changes
+	•	All unstaged changes
+	•	Latest commit diff
+
+git diff --cached > changes.txt
+git diff >> changes.txt
+git show HEAD >> changes.txt
+
+
+⸻
+
+## 9. (Optional) Shell Script to Save All Diffs
+```
+#!/bin/bash
+timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+outfile="changes_$timestamp.txt"
+
+{
+  echo "### Staged Changes ###"
+  git diff --cached
+  echo
+
+  echo "### Unstaged Changes ###"
+  git diff
+  echo
+
+  echo "### Latest Commit ###"
+  git show HEAD
+} > "$outfile"
+
+echo "Saved all changes to $outfile"
+```
+
+---
+

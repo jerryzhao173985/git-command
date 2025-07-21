@@ -790,3 +790,96 @@ echo "Saved all changes to $outfile"
 
 ---
 
+## Subfolder becomes Github submodule
+
+### 1. Confirming your goal
+
+You want `cppcheck-studio/` to become its **own GitHub repository** so it can be reused elsewhere, and in your existing `lpz` repo you want it referenced as a **Git submodule** (so the parent repo only tracks a commit pointer, not the files themselves). That is exactly what Git submodules are for. ([Git][1], [Atlassian][2])
+
+---
+
+### 2. Two possible starting situations
+
+**A. Folder currently untracked (your case).**
+No history to preserve. You can just initialize a new repo in the folder and push it.
+
+**B. Folder had history in `lpz` you wanted to keep.**
+Then you would *first* split that history out using `git filter-repo` (recommended) following GitHub’s guide, then proceed to add it as a submodule. ([GitHub Docs][3], [git-tower.com][4])
+
+(I’ll give commands for A, and a brief note for B.)
+
+---
+
+### 3. Create the standalone repository (case A)
+
+On GitHub, create **empty** repo `cppcheck-studio` (no README/license).
+
+From your existing local folder:
+
+```bash
+cd /Users/jerry/simulator/lpz/cppcheck-studio
+git init -b main
+git add .
+git commit -m "Initial standalone commit"
+git remote add origin https://github.com/jerryzhao173985/cppcheck-studio.git
+git push -u origin main
+```
+
+At this point `cppcheck-studio/` is a *nested* repo but not yet a submodule of `lpz`.
+
+---
+
+### 4. Add it to `lpz` as a submodule
+
+From the **parent** repo root:
+
+```bash
+cd /Users/jerry/simulator/lpz
+# Remove the existing working tree copy so Git can clone the submodule cleanly:
+rm -rf cppcheck-studio
+git submodule add https://github.com/jerryzhao173985/cppcheck-studio.git cppcheck-studio
+git commit -m "Add cppcheck-studio as submodule"
+git push
+```
+
+`git submodule add` creates a `.gitmodules` file and records the submodule URL + path. ([Git][5], [Git][6])
+
+> **Alternative:** If you don’t want to delete the folder, you can force-add over the existing directory:
+> `git submodule add -f https://github.com/jerryzhao173985/cppcheck-studio.git cppcheck-studio`
+> then commit `.gitmodules` and the gitlink.
+
+---
+
+### 5. (If you needed history – case B)
+
+Instead of step 3’s simple init, you would: clone `lpz` elsewhere, run `git filter-repo --path cppcheck-studio/ --path-rename cppcheck-studio/:` to extract history, push that to the new GitHub repo, then remove the original folder from `lpz` and add the submodule as above. ([GitHub Docs][3], [git-tower.com][4])
+
+---
+
+### 6. Daily workflow / best practices
+
+* **Work inside the submodule:** `cd cppcheck-studio`, commit & push there first. ([Atlassian][2], [Atlassian][7])
+* **Update parent pointer:** After pushing submodule changes, go back to `lpz` root: `git add cppcheck-studio && git commit -m "Update submodule: cppcheck-studio to <new commit>" && git push`. The parent stores the specific commit (a “gitlink”). ([Atlassian][2])
+* **Clone with submodules:** New consumers run `git clone --recurse-submodules https://github.com/jerryzhao173985/lpz.git` (or after cloning: `git submodule update --init --recursive`). ([chrisjean.com][8])
+* **Pull updates:** In parent: `git pull` then `git submodule update --remote --merge` (if you want latest submodule commits) or manually `cd cppcheck-studio && git pull`. ([Atlassian][2])
+* **Do not mix unrelated changes:** Keep submodule commits separate; publish submodule changes *before* committing the parent pointer, to avoid broken references for collaborators. ([Atlassian][7])
+* **.gitignore:** Do **not** ignore the submodule path; Git tracks it via the gitlink + `.gitmodules`.
+
+---
+
+### 7. Removing later (if needed)
+
+To remove: `git submodule deinit -f cppcheck-studio && git rm -f cppcheck-studio && rm -rf .git/modules/cppcheck-studio && git commit -m "Remove submodule"`.
+
+---
+
+### 8. Submodule vs subtree (FYI)
+
+Submodules keep histories cleanly separated (your stated goal). Git subtree is an alternative that vendors the code directly into the parent history; you chose correctly for reuse. ([Atlassian][2])
+
+---
+
+**Summary:** Initialize and push the folder as its own repo, delete it from the parent, then `git submodule add` it back. Commit submodule changes first, then update the parent pointer. Follow the commands above and you’ll have a clean, reusable standalone module. Let me know if you’d like a one‑liner script to automate it.
+
+---
+
